@@ -9,6 +9,7 @@ For now, I just copy-paste some useful snippets that I use
 
 ## Calculate net value flow between addresses
 
+```sql
 WITH JETTON_TRANSFERS AS (
     SELECT 
         block_date, source, destination, jetton_master AS token_address, amount
@@ -55,5 +56,6 @@ WITH JETTON_TRANSFERS AS (
     GROUP BY 1,2
     ORDER BY 3 DESC
 )
+```
 
 In result, you get the table that shows the value flow between addresses. 
