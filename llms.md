@@ -1,7 +1,9 @@
-Useful links:
-1. https://docs.ton.org/v3/documentation/data-formats/tlb/cell-boc
-2. https://blog.ton.org/ton-on-chain-data-analysis-dune
+# TON Blockchain data analysis with Dune
 
+This document cointains the guide for AI agents to understand how to write Dune SQL queries and analyse TON Blockchain data. 
+
+# Facts about Dune you should know
+To write a query on Dune, you need to follow Presto SQL syntax.
 
 
 # Useful Dune snippets
@@ -76,6 +78,7 @@ WITH
 NFT_NAMES AS (
     SELECT 
         address, 
+        MAX(parent_address) AS parent_address,
         MAX_BY(
             COALESCE(
                 name,
@@ -86,4 +89,20 @@ NFT_NAMES AS (
     FROM ton.nft_metadata NM
     GROUP BY 1
 )
+, NFT_COLLECTION_NAME AS (
+    -- in case you want to aggregate NFTs by collection name if presented
+    SELECT 
+        NFT_NAMES.address, COALESCE(COLLECTION.name, NFT_NAMES.name) AS name
+    FROM NFT_NAMES
+    LEFT JOIN NFT_NAMES AS COLLECTION
+        ON COLLECTION.address = NFT_NAMES.parent_address
+    WHERE COALESCE(COLLECTION.name, NFT_NAMES.name) IS NOT NULL 
+)
 ```
+
+
+## Misc
+
+Useful links:
+1. https://docs.ton.org/v3/documentation/data-formats/tlb/cell-boc
+2. https://blog.ton.org/ton-on-chain-data-analysis-dune
