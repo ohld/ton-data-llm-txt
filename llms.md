@@ -45,6 +45,7 @@ WITH JETTON_TRANSFERS AS (
         from_,
         to_,
         SUM(amount_ * P.price_usd) AS net_volume_usd
+        -- SUM(ABS(amount_) * P.price_usd) AS volume_usd,
     FROM TRANSFERS T
     CROSS JOIN UNNEST (ARRAY[
       ROW(source, destination, amount), 
@@ -58,3 +59,31 @@ WITH JETTON_TRANSFERS AS (
 ```
 
 In result, you get the table that shows the value flow between addresses. 
+
+
+## Labels
+
+### Labels from github repo 
+```sql
+SELECT address, label, organization, category
+FROM dune.ton_foundation.dataset_labels
+```
+
+### NFT and NFT collections names
+
+```sql
+WITH
+NFT_NAMES AS (
+    SELECT 
+        address, 
+        MAX_BY(
+            COALESCE(
+                name,
+                json_extract_scalar(content_onchain, '$.domain') || '.ton'
+            )
+            , adding_date
+        ) AS name
+    FROM ton.nft_metadata NM
+    GROUP BY 1
+)
+```
