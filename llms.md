@@ -24,7 +24,7 @@ WITH JETTON_TRANSFERS AS (
 , TON_TRANSFERS AS (
     SELECT 
         block_date, source, destination, 
-        '0:0000000000000000000000000000000000000000000000000000000000000000' AS token_address,
+        '0:0000000000000000000000000000000000000000000000000000000000000000' AS token_address, -- address of TON token
         value AS amount
     FROM ton.messages M
     WHERE 1=1
@@ -50,11 +50,10 @@ WITH JETTON_TRANSFERS AS (
       ROW(source, destination, amount), 
       ROW(destination, source, amount * -1)
     ]) AS T(from_, to_, amount_)
-    INNER JOIN dune.ton_foundation.result_jetton_price_daily P
-        ON P.ts = T.block_date
+    INNER JOIN ton.prices_daily P
+        ON P.timestamp = T.block_date
         AND P.token_address = T.token_address
     GROUP BY 1,2
-    ORDER BY 3 DESC
 )
 ```
 
