@@ -2,6 +2,8 @@
 
 This document cointains the guide for AI agents to understand how to write Dune SQL queries and analyse TON Blockchain data. 
 
+Dune docs: https://docs.dune.com/data-catalog/ton/overview 
+
 # Facts about Dune you should know
 To write a query on Dune, you need to follow Presto SQL syntax.
 
