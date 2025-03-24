@@ -102,6 +102,65 @@ NFT_NAMES AS (
 )
 ```
 
+## How many fees were paid to execute a trace
+We can calculate how many fees were paid to execute a trace by its initiator. It is not obvious how to calculate how many gas fees were consumed by each smart contract in a trace. 
+
+```sql
+, _TRACE_FEES AS (
+    SELECT block_date, trace_id, T.total_fees AS fees
+    FROM ton.transactions T 
+    WHERE T.block_date >= NOW() - INTERVAL '{{Since days ago}}' DAY
+    
+    UNION ALL
+    
+    -- calcualte forward fees
+    SELECT block_date, trace_id, M.fwd_fee AS fees
+    FROM ton.messages M 
+    WHERE M.block_date >= NOW() - INTERVAL '{{Since days ago}}' DAY
+        AND M.direction ='in'
+)
+
+, TRACE_FEES AS (
+    SELECT 
+        trace_id, SUM(fees * P.price_usd) AS fee_usd -- convert fees to USD
+    FROM _TRACE_FEES TR
+    LEFT JOIN ton.prices_daily P 
+        ON P.timestamp = TR.block_date
+        AND P.token_address = '0:0000000000000000000000000000000000000000000000000000000000000000'
+    GROUP BY 1
+)
+
+, TRACE_INITIATOR AS (
+    -- trace may contain multiple transactions
+    -- the first transaction hash = trace_id
+    SELECT T.trace_id, T.account
+    FROM ton.transactions T
+    WHERE T.block_date >= NOW() - INTERVAL '{{Since days ago}}' DAY
+        AND T.trace_id = T.hash
+)
+```
+
+## Filter out jetton_wallets
+Same works for filtering out other contract interfaces like `jetton_master`.
+
+```sql
+
+...
+INNER JOIN ton.accounts A on A.address = ton.transactions.account
+WHERE array_position(A.interfaces, 'jetton_wallet') = 0
+```
+
+## ton.accounts useful columns
+
+```sql
+SELECT 
+    address, 
+    deployment_at,  -- useful for age calculation
+    last_tx_at, -- latest transaction time
+    balance, -- latest balance
+    first_tx_sender, -- address who initiated first tx to this address
+    interfaces -- array of strings 
+FROM ton.accounts
 
 ## Misc
 
